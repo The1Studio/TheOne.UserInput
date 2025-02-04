@@ -1,0 +1,17 @@
+{
+  "name": "com.theone.userinput",
+  "displayName": "TheOne User Input",
+  "description": "User Input System for Unity",
+  "version": "1.0.90",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "phuongdmp",
+    "email": "phuongdmp7@gmail.com",
+    "url": "https://github.com/phuongdmp7"
+  },
+  "dependencies": {
+    "com.theone.logging": "1.0.0",
+    "com.theone.di": "1.0.0"
+  }
+}

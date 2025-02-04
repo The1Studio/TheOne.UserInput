@@ -1,0 +1,17 @@
+{
+    "name": "TheOne.UserInput",
+    "rootNamespace": "",
+    "references": [
+        "GameFoundation.Signals",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
