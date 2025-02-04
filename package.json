@@ -2,7 +2,7 @@
   "name": "com.theone.userinput",
   "displayName": "TheOne User Input",
   "description": "User Input System for Unity",
-  "version": "1.0.90",
+  "version": "1.0.0",
   "unity": "6000.0",
   "license": "MIT",
   "author": {
