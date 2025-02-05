@@ -30,7 +30,9 @@
         // if use LateTick, phase Ended IsOverUI will always return false
         public void LateTick()
         {
+            #if UNITY_EDITOR
             this.UpdateOnEditor();
+            #endif
 
             switch (Input.touchCount)
             {
