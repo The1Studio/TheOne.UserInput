@@ -90,9 +90,11 @@
             }
         }
 
+        #if UNITY_EDITOR
+
+        private Vector2 lastMousePosition;
         private void UpdateOnEditor()
         {
-            #if UNITY_EDITOR
             // For test on game window only
             if (Input.mouseScrollDelta.y != 0)
             {
@@ -106,6 +108,7 @@
                 this.touchStartPosition                = Input.mousePosition;
                 this.userTouchDownSignal.TouchPosition = Input.mousePosition;
                 this.isStartTouchOverUI                = IsPointerOverUIObject();
+                this.lastMousePosition                 = Input.mousePosition;
                 this.signalBus.Fire(this.userTouchDownSignal);
                 return;
             }
@@ -124,7 +127,9 @@
                 this.userDragSignal.TouchPosition      = Input.mousePosition;
                 this.userDragSignal.TouchStartPosition = this.touchStartPosition;
                 this.userDragSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
+                this.userDragSignal.DeltaPosition      = (Vector2)Input.mousePosition - this.lastMousePosition;
                 this.signalBus.Fire(this.userDragSignal);
+                this.lastMousePosition = Input.mousePosition;
             }
 
             bool IsPointerOverUIObject()
@@ -134,8 +139,8 @@
                 if (EventSystem.current) EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
                 return results.Count > 0;
             }
-            #endif
         }
+        #endif
 
         private static bool IsTouchOverUI(Touch touch)
         {
