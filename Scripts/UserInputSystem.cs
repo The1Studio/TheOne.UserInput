@@ -20,6 +20,7 @@
 
         private readonly SignalBus signalBus;
 
+        [Preserve]
         private UserInputSystem(SignalBus signalBus)
         {
             this.signalBus = signalBus;
