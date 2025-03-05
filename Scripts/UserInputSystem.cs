@@ -5,6 +5,7 @@
     using TheOne.UserInput.Scripts.Signals;
     using UnityEngine;
     using UnityEngine.EventSystems;
+    using UnityEngine.Scripting;
     using VContainer.Unity;
 
     public class UserInputSystem : ILateTickable
