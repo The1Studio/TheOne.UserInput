@@ -13,11 +13,9 @@
         private readonly UserTouchDownSignal userTouchDownSignal = new();
         private readonly UserDragSignal      userDragSignal      = new();
         private readonly UserTouchUpSignal   userTouchUpSignal   = new();
-        private readonly UserZoomSignal      userZoomSignal      = new();
 
         private Vector2 touchStartPosition;
         private bool    isStartTouchOverUI;
-        private bool    isZoomAction;
 
         private readonly SignalBus signalBus;
 
@@ -36,31 +34,6 @@
             this.UpdateOnEditor();
             #endif
 
-            switch (Input.touchCount)
-            {
-                case <= 0:
-                    this.isZoomAction = false;
-                    return;
-                case > 1:
-                {
-                    var t0       = Input.GetTouch(0);
-                    var t1       = Input.GetTouch(1);
-                    var prevDist = (t0.position - t0.deltaPosition - (t1.position - t1.deltaPosition)).magnitude;
-                    var currDist = (t0.position - t1.position).magnitude;
-                    this.userZoomSignal.ZoomChangeAmount = currDist - prevDist;
-                    this.signalBus.Fire(this.userZoomSignal);
-                    this.isZoomAction = true;
-                    return;
-                }
-                default:
-                    if (this.isZoomAction) return;
-                    this.UpdateTouch();
-                    return;
-            }
-        }
-
-        private void UpdateTouch()
-        {
             var touch = Input.GetTouch(0);
 
             switch (touch.phase)
@@ -99,14 +72,6 @@
         private Vector2 lastMousePosition;
         private void UpdateOnEditor()
         {
-            // For test on game window only
-            if (Input.mouseScrollDelta.y != 0)
-            {
-                this.userZoomSignal.ZoomChangeAmount = Input.mouseScrollDelta.y * 50;
-                this.signalBus.Fire(this.userZoomSignal);
-                return;
-            }
-
             if (Input.GetMouseButtonDown(0))
             {
                 this.touchStartPosition                = Input.mousePosition;
@@ -149,7 +114,7 @@
         private static bool IsTouchOverUI(Touch touch)
         {
             var eventSystem = EventSystem.current;
-            return eventSystem != null && eventSystem.IsPointerOverGameObject(touch.fingerId); // check null for editor
+            return eventSystem && eventSystem.IsPointerOverGameObject(touch.fingerId); // check null for game view
         }
     }
 }

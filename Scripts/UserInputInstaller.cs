@@ -11,7 +11,6 @@
             builder.DeclareSignal<UserTouchDownSignal>();
             builder.DeclareSignal<UserDragSignal>();
             builder.DeclareSignal<UserTouchUpSignal>();
-            builder.DeclareSignal<UserZoomSignal>();
 
             builder.Register<UserInputSystem>(Lifetime.Singleton).AsImplementedInterfaces();
         }
