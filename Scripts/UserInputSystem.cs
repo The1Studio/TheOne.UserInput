@@ -43,7 +43,7 @@
             #endif
 
             if (Input.touchCount == 0) return;
-            
+
             if (!this.fingerId.HasValue)
             {
                 var touches = Input.touches.Where(t => this.IsInsideActivationArea(t.position)).ToList();
@@ -88,10 +88,14 @@
         #if UNITY_EDITOR
 
         private Vector2 lastMousePosition;
+        private bool    isStartValidTouch;
         private void UpdateOnEditor()
         {
             if (Input.GetMouseButtonDown(0))
             {
+                this.isStartValidTouch = this.IsInsideActivationArea(Input.mousePosition);
+                if (!this.isStartValidTouch) return;
+
                 this.touchStartPosition                = Input.mousePosition;
                 this.userTouchDownSignal.TouchPosition = Input.mousePosition;
                 this.isStartTouchOverUI                = IsPointerOverUIObject();
@@ -102,15 +106,18 @@
 
             if (Input.GetMouseButtonUp(0))
             {
+                if (!this.isStartValidTouch) return;
                 this.userTouchUpSignal.StartPosition      = this.touchStartPosition;
                 this.userTouchUpSignal.TouchPosition      = Input.mousePosition;
                 this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                 this.signalBus.Fire(this.userTouchUpSignal);
+                this.isStartValidTouch = false;
                 return;
             }
 
             if (Input.GetMouseButton(0))
             {
+                if (!this.isStartValidTouch) return;
                 this.userDragSignal.TouchPosition      = Input.mousePosition;
                 this.userDragSignal.TouchStartPosition = this.touchStartPosition;
                 this.userDragSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
