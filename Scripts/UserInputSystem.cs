@@ -1,6 +1,7 @@
 ﻿namespace TheOne.UserInput.Scripts
 {
     using System.Collections.Generic;
+    using System.Linq;
     using GameFoundation.Signals;
     using TheOne.UserInput.Scripts.Signals;
     using UnityEngine;
@@ -16,14 +17,21 @@
 
         private Vector2 touchStartPosition;
         private bool    isStartTouchOverUI;
+        private int?    fingerId;
 
-        private readonly SignalBus signalBus;
+        #region Inject
+
+        private readonly SignalBus       signalBus;
+        private readonly UserInputConfig userInputConfig;
 
         [Preserve]
-        private UserInputSystem(SignalBus signalBus)
+        private UserInputSystem(SignalBus signalBus, UserInputConfig userInputConfig)
         {
-            this.signalBus = signalBus;
+            this.signalBus       = signalBus;
+            this.userInputConfig = userInputConfig;
         }
+
+        #endregion
 
         // UseLateTick instead of LateTick if you want to check Over UI
         // if use Tick, phase Began IsOverUI will always return false
@@ -34,7 +42,16 @@
             this.UpdateOnEditor();
             #endif
 
-            var touch = Input.GetTouch(0);
+            if (Input.touchCount == 0) return;
+            
+            if (!this.fingerId.HasValue)
+            {
+                var touches = Input.touches.Where(t => this.IsInsideActivationArea(t.position)).ToList();
+                if (touches.Count == 0) return;
+                this.fingerId = touches.First().fingerId;
+            }
+
+            var touch = Input.GetTouch(this.fingerId.Value);
 
             switch (touch.phase)
             {
@@ -63,6 +80,7 @@
                     this.userTouchUpSignal.TouchPosition      = touch.position;
                     this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                     this.signalBus.Fire(this.userTouchUpSignal);
+                    this.fingerId = null;
                     break;
             }
         }
@@ -115,6 +133,12 @@
         {
             var eventSystem = EventSystem.current;
             return eventSystem && eventSystem.IsPointerOverGameObject(touch.fingerId); // check null for game view
+        }
+
+        private bool IsInsideActivationArea(Vector2 touchPosition)
+        {
+            var activationArea = new Rect(this.userInputConfig.MinActivationArea, this.userInputConfig.MaxActivationArea - this.userInputConfig.MinActivationArea);
+            return activationArea.Contains(new Vector2(touchPosition.x / Screen.width, touchPosition.y / Screen.height));
         }
     }
 }
