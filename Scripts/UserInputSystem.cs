@@ -1,7 +1,6 @@
 ﻿namespace TheOne.UserInput.Scripts
 {
     using System.Collections.Generic;
-    using System.Linq;
     using GameFoundation.Signals;
     using TheOne.UserInput.Scripts.Signals;
     using UnityEngine;
@@ -17,7 +16,8 @@
 
         private Vector2 touchStartPosition;
         private bool    isStartTouchOverUI;
-        private int?    fingerId;
+        private int?    fingerId = null;
+        private bool    isTrackingTouch;
 
         #region Inject
 
@@ -42,46 +42,121 @@
             this.UpdateOnEditor();
             #endif
 
-            if (Input.touchCount == 0) return;
+            // Handle touch input
+            this.HandleTouchInput();
+        }
 
-            if (!this.fingerId.HasValue)
+        private void HandleTouchInput()
+        {
+            // If we're not tracking a touch and there are no touches, do nothing
+            if (!this.isTrackingTouch && Input.touchCount == 0) return;
+
+            // If we're tracking a touch but it's no longer active, reset tracking
+            if (this.isTrackingTouch && this.fingerId.HasValue)
             {
-                var touches = Input.touches.Where(t => this.IsInsideActivationArea(t.position)).ToList();
-                if (touches.Count == 0) return;
-                this.fingerId = touches.First().fingerId;
-            }
+                var touchStillExists = false;
+                for (var i = 0; i < Input.touchCount; i++)
+                {
+                    if (Input.GetTouch(i).fingerId == this.fingerId.Value)
+                    {
+                        touchStillExists = true;
+                        break;
+                    }
+                }
 
-            var touch = Input.GetTouch(this.fingerId.Value);
-
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    this.touchStartPosition                = touch.position;
-                    this.userTouchDownSignal.TouchPosition = touch.position;
-                    this.userTouchDownSignal.Touch         = touch;
-                    this.userTouchDownSignal.IsTouchOverUI = IsTouchOverUI(touch);
-                    this.isStartTouchOverUI                = IsTouchOverUI(touch);
-                    this.signalBus.Fire(this.userTouchDownSignal);
-                    break;
-
-                case TouchPhase.Moved:
-                case TouchPhase.Stationary:
-                    this.userDragSignal.TouchPosition      = touch.position;
-                    this.userDragSignal.TouchStartPosition = this.touchStartPosition;
-                    this.userDragSignal.DeltaPosition      = touch.deltaPosition;
-                    this.userDragSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
-                    this.signalBus.Fire(this.userDragSignal);
-                    break;
-
-                case TouchPhase.Ended:
-                case TouchPhase.Canceled:
-                default:
+                if (!touchStillExists)
+                {
+                    // Touch was lost, fire touch up signal
                     this.userTouchUpSignal.StartPosition      = this.touchStartPosition;
-                    this.userTouchUpSignal.TouchPosition      = touch.position;
+                    this.userTouchUpSignal.TouchPosition      = Input.GetTouch(0).position; // Use last known position
                     this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                     this.signalBus.Fire(this.userTouchUpSignal);
-                    this.fingerId = null;
-                    break;
+
+                    // Reset tracking
+                    this.isTrackingTouch = false;
+                    this.fingerId        = null;
+                    return;
+                }
+            }
+
+            // Start tracking a new touch if we're not already tracking one
+            if (!this.isTrackingTouch && Input.touchCount > 0)
+            {
+                // Find the first touch in the activation area
+                for (var i = 0; i < Input.touchCount; i++)
+                {
+                    var touch = Input.GetTouch(i);
+                    if (this.IsInsideActivationArea(touch.position))
+                    {
+                        this.fingerId        = touch.fingerId;
+                        this.isTrackingTouch = true;
+                        break;
+                    }
+                }
+
+                // If no valid touch found, exit
+                if (!this.isTrackingTouch) return;
+            }
+
+            // Process the tracked touch
+            if (this.isTrackingTouch && this.fingerId.HasValue)
+            {
+                // Find the current touch with our fingerId
+                var currentTouch = new Touch();
+                var touchFound   = false;
+
+                for (var i = 0; i < Input.touchCount; i++)
+                {
+                    var touch = Input.GetTouch(i);
+                    if (touch.fingerId == this.fingerId.Value)
+                    {
+                        currentTouch = touch;
+                        touchFound   = true;
+                        break;
+                    }
+                }
+
+                // If we can't find our touch, reset tracking
+                if (!touchFound)
+                {
+                    this.isTrackingTouch = false;
+                    this.fingerId        = null;
+                    return;
+                }
+
+                // Process the touch based on its phase
+                switch (currentTouch.phase)
+                {
+                    case TouchPhase.Began:
+                        this.touchStartPosition                = currentTouch.position;
+                        this.userTouchDownSignal.TouchPosition = currentTouch.position;
+                        this.userTouchDownSignal.Touch         = currentTouch;
+                        this.userTouchDownSignal.IsTouchOverUI = IsTouchOverUI(currentTouch);
+                        this.isStartTouchOverUI                = IsTouchOverUI(currentTouch);
+                        this.signalBus.Fire(this.userTouchDownSignal);
+                        break;
+
+                    case TouchPhase.Moved:
+                    case TouchPhase.Stationary:
+                        this.userDragSignal.TouchPosition      = currentTouch.position;
+                        this.userDragSignal.TouchStartPosition = this.touchStartPosition;
+                        this.userDragSignal.DeltaPosition      = currentTouch.deltaPosition;
+                        this.userDragSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
+                        this.signalBus.Fire(this.userDragSignal);
+                        break;
+
+                    case TouchPhase.Ended:
+                    case TouchPhase.Canceled:
+                        this.userTouchUpSignal.StartPosition      = this.touchStartPosition;
+                        this.userTouchUpSignal.TouchPosition      = currentTouch.position;
+                        this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
+                        this.signalBus.Fire(this.userTouchUpSignal);
+
+                        // Reset tracking
+                        this.isTrackingTouch = false;
+                        this.fingerId        = null;
+                        break;
+                }
             }
         }
 
