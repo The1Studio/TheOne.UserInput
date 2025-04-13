@@ -3,3 +3,8 @@
 - Register in GameLifetimeScope
   - builder.RegisterUserInput();
 - Subscribe desire signals
+
+#﻿Install by submodule
+```bash
+git submodule add git@github.com:The1Studio/UserInput.git Assets/TheOne/UserInput
+```
