@@ -6,5 +6,5 @@
 
 #﻿Install by submodule
 ```bash
-git submodule add git@github.com:The1Studio/UserInput.git Assets/TheOne/UserInput
+git submodule add git@github.com:The1Studio/TheOne.UserInput.git Assets/TheOne/UserInput
 ```
