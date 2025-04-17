@@ -15,6 +15,7 @@
         private readonly UserTouchUpSignal   userTouchUpSignal   = new();
 
         private Vector2 touchStartPosition;
+        private Vector2 lastTouchPosition;
         private bool    isStartTouchOverUI;
         private int?    fingerId = null;
         private bool    isTrackingTouch;
@@ -68,7 +69,7 @@
                 {
                     // Touch was lost, fire touch up signal
                     this.userTouchUpSignal.StartPosition      = this.touchStartPosition;
-                    this.userTouchUpSignal.TouchPosition      = Input.GetTouch(0).position; // Use last known position
+                    this.userTouchUpSignal.TouchPosition      = this.lastTouchPosition; // Use last known position
                     this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                     this.signalBus.Fire(this.userTouchUpSignal);
 
@@ -129,6 +130,7 @@
                 {
                     case TouchPhase.Began:
                         this.touchStartPosition                = currentTouch.position;
+                        this.lastTouchPosition                 = currentTouch.position;
                         this.userTouchDownSignal.TouchPosition = currentTouch.position;
                         this.userTouchDownSignal.Touch         = currentTouch;
                         this.userTouchDownSignal.IsTouchOverUI = IsTouchOverUI(currentTouch);
@@ -138,6 +140,7 @@
 
                     case TouchPhase.Moved:
                     case TouchPhase.Stationary:
+                        this.lastTouchPosition                 = currentTouch.position;
                         this.userDragSignal.TouchPosition      = currentTouch.position;
                         this.userDragSignal.TouchStartPosition = this.touchStartPosition;
                         this.userDragSignal.DeltaPosition      = currentTouch.deltaPosition;
@@ -147,6 +150,7 @@
 
                     case TouchPhase.Ended:
                     case TouchPhase.Canceled:
+                        this.lastTouchPosition                    = currentTouch.position;
                         this.userTouchUpSignal.StartPosition      = this.touchStartPosition;
                         this.userTouchUpSignal.TouchPosition      = currentTouch.position;
                         this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
