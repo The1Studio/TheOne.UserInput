@@ -170,6 +170,8 @@
         private bool    isStartValidTouch;
         private void UpdateOnEditor()
         {
+            if (Input.touchCount != 0) return;
+            
             if (Input.GetMouseButtonDown(0))
             {
                 this.isStartValidTouch = this.IsInsideActivationArea(Input.mousePosition);
