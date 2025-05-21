@@ -17,7 +17,7 @@
 
             builder.Register<UserInputSystem>(Lifetime.Singleton)
                 .WithParameter(config)
-                .AsImplementedInterfaces();
+                .AsImplementedInterfaces().AsSelf();
         }
     }
 }

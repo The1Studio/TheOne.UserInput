@@ -23,7 +23,7 @@
         #region Inject
 
         private readonly SignalBus       signalBus;
-        private readonly UserInputConfig userInputConfig;
+        private          UserInputConfig userInputConfig;
 
         [Preserve]
         private UserInputSystem(SignalBus signalBus, UserInputConfig userInputConfig)
@@ -33,6 +33,8 @@
         }
 
         #endregion
+
+        public void UpdateUserInputConfig(UserInputConfig userInputConfig = null) => this.userInputConfig = userInputConfig ?? new(Vector2.zero, Vector2.one);
 
         // UseLateTick instead of LateTick if you want to check Over UI
         // if use Tick, phase Began IsOverUI will always return false
@@ -61,6 +63,7 @@
                     if (Input.GetTouch(i).fingerId == this.fingerId.Value)
                     {
                         touchStillExists = true;
+
                         break;
                     }
                 }
@@ -76,6 +79,7 @@
                     // Reset tracking
                     this.isTrackingTouch = false;
                     this.fingerId        = null;
+
                     return;
                 }
             }
@@ -91,6 +95,7 @@
                     {
                         this.fingerId        = touch.fingerId;
                         this.isTrackingTouch = true;
+
                         break;
                     }
                 }
@@ -113,6 +118,7 @@
                     {
                         currentTouch = touch;
                         touchFound   = true;
+
                         break;
                     }
                 }
@@ -122,6 +128,7 @@
                 {
                     this.isTrackingTouch = false;
                     this.fingerId        = null;
+
                     return;
                 }
 
@@ -136,6 +143,7 @@
                         this.userTouchDownSignal.IsTouchOverUI = IsTouchOverUI(currentTouch);
                         this.isStartTouchOverUI                = IsTouchOverUI(currentTouch);
                         this.signalBus.Fire(this.userTouchDownSignal);
+
                         break;
 
                     case TouchPhase.Moved:
@@ -146,6 +154,7 @@
                         this.userDragSignal.DeltaPosition      = currentTouch.deltaPosition;
                         this.userDragSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                         this.signalBus.Fire(this.userDragSignal);
+
                         break;
 
                     case TouchPhase.Ended:
@@ -159,6 +168,7 @@
                         // Reset tracking
                         this.isTrackingTouch = false;
                         this.fingerId        = null;
+
                         break;
                 }
             }
@@ -171,10 +181,11 @@
         private void UpdateOnEditor()
         {
             if (Input.touchCount != 0) return;
-            
+
             if (Input.GetMouseButtonDown(0))
             {
                 this.isStartValidTouch = this.IsInsideActivationArea(Input.mousePosition);
+
                 if (!this.isStartValidTouch) return;
 
                 this.touchStartPosition                = Input.mousePosition;
@@ -182,6 +193,7 @@
                 this.isStartTouchOverUI                = IsPointerOverUIObject();
                 this.lastMousePosition                 = Input.mousePosition;
                 this.signalBus.Fire(this.userTouchDownSignal);
+
                 return;
             }
 
@@ -193,6 +205,7 @@
                 this.userTouchUpSignal.IsStartTouchOverUI = this.isStartTouchOverUI;
                 this.signalBus.Fire(this.userTouchUpSignal);
                 this.isStartValidTouch = false;
+
                 return;
             }
 
@@ -212,6 +225,7 @@
                 var eventDataCurrentPosition = new PointerEventData(EventSystem.current) { position = new(Input.mousePosition.x, Input.mousePosition.y) };
                 var results                  = new List<RaycastResult>();
                 if (EventSystem.current) EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+
                 return results.Count > 0;
             }
         }
@@ -220,12 +234,14 @@
         private static bool IsTouchOverUI(Touch touch)
         {
             var eventSystem = EventSystem.current;
+
             return eventSystem && eventSystem.IsPointerOverGameObject(touch.fingerId); // check null for game view
         }
 
         private bool IsInsideActivationArea(Vector2 touchPosition)
         {
             var activationArea = new Rect(this.userInputConfig.MinActivationArea, this.userInputConfig.MaxActivationArea - this.userInputConfig.MinActivationArea);
+
             return activationArea.Contains(new Vector2(touchPosition.x / Screen.width, touchPosition.y / Screen.height));
         }
     }
